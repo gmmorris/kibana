@@ -76,7 +76,7 @@ pipeline {
       stages {
         stage('Build and Publish Base Image') {
           steps {
-            docker build -t kibana-ci:base .
+            sh 'docker build -t kibana-ci:base .'
           }
         }
       }
