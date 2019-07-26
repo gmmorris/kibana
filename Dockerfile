@@ -51,7 +51,6 @@ COPY --chown=kibana:kibana packages/kbn-ui-framework/package.json /app/packages/
 COPY --chown=kibana:kibana x-pack/package.json /app/x-pack/package.json
 COPY --chown=kibana:kibana x-pack/legacy/plugins/infra/package.json /app/x-pack/legacy/plugins/infra/package.json
 COPY --chown=kibana:kibana x-pack/legacy/plugins/siem/package.json /app/x-pack/legacy/plugins/siem/package.json
-COPY --chown=kibana:kibana x-pack/legacy/plugins/siem/yarn.lock /app/x-pack/legacy/plugins/siem/yarn.lock
 COPY --chown=kibana:kibana test/plugin_functional/plugins/core_plugin_a/package.json /app/test/plugin_functional/plugins/core_plugin_a/package.json
 COPY --chown=kibana:kibana test/plugin_functional/plugins/core_plugin_b/package.json /app/test/plugin_functional/plugins/core_plugin_b/package.json
 COPY --chown=kibana:kibana test/plugin_functional/plugins/kbn_tp_custom_visualizations/package.json /app/test/plugin_functional/plugins/kbn_tp_custom_visualizations/package.json
@@ -61,11 +60,10 @@ COPY --chown=kibana:kibana test/plugin_functional/plugins/kbn_tp_sample_panel_ac
 COPY --chown=kibana:kibana test/plugin_functional/plugins/kbn_tp_visualize_embedding/package.json /app/test/plugin_functional/plugins/kbn_tp_visualize_embedding/package.json
 COPY --chown=kibana:kibana test/interpreter_functional/plugins/kbn_tp_run_pipeline/package.json /app/test/interpreter_functional/plugins/kbn_tp_run_pipeline/package.json
 
-RUN yarn install --frozen-lockfile
-
 COPY --chown=kibana:kibana . /app
 
-RUN yarn kbn bootstrap --frozen-lockfile
+RUN yarn kbn clean && yarn kbn bootstrap
 
-ENTRYPOINT ["/usr/local/bin/dumb-init", "--", "yarn"]
-CMD ["start"]
+CMD echo "### Base Image Done"
+# ENTRYPOINT ["/usr/local/bin/dumb-init", "--", "yarn"]
+# CMD ["start"]

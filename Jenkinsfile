@@ -24,8 +24,8 @@ library identifier: 'apm@current', retriever: modernSCM(
    credentialsId: 'f6c7695a-671e-4f4f-a331-acdce44ff9ba'])
 
 pipeline {
-  //  agent { label 'linux && immutable' }
-  agent any
+  agent { label 'linux && immutable' }
+  // agent any
   environment {
     CI_DIR = "./.ci"
     GROOVY_SRC = "${CI_DIR}/src/groovy"
@@ -68,25 +68,15 @@ pipeline {
     booleanParam(name: 'x_pack_ciGroup_ci', defaultValue: false, description: 'X-Pack Group Tests')
   }
   stages {
-    /**
-     Checkout the code and stash it, to use it on other stages.
-     */
     stage('Initializing') {
       agent { label 'linux || immutable' }
-//      agent any
       environment {
         HOME = "${env.WORKSPACE}"
       }
       stages {
-        // stage('Checkout') {
-        //   steps {
-        //     checkoutES()
-        //    checkoutKibana()
-        //   }
-        // }
-        stage('Quick Test') {
+        stage('Build and Publish Base Image') {
           steps {
-            quickTest()
+            docker build -t kibana-ci:base .
           }
         }
       }
@@ -167,34 +157,7 @@ def quickTest(){
     sh 'cd x-pack && node ./scripts/jest.js plugins/apm'
   }
 }
-/**
- install NodeJs, it uses stash as cache.
 
- see how to we can grab the cache from ~/.npm/_cacache
- */
-def installNodeJs(nodeVersion, pakages = null) {
-  nodeEnviromentVars(nodeVersion)
-  useCache('nodeJs') {
-    sh label: 'Install Node.js', script: """#!/bin/bash
-    set -euxo pipefail
-    NODE_URL="https://nodejs.org/dist/v${nodeVersion}/node-v${nodeVersion}-linux-x64.tar.gz"
-    mkdir -p "${NODE_DIR}"
-    curl -sL \${NODE_URL} | tar -xz -C "${NODE_DIR}" --strip-components=1
-    node --version
-    npm config set prefix "${NODE_DIR}"
-    npm config list
-    """
-    def cmd = "echo 'Installing aditional packages'\n"
-    pakages?.each { pkg ->
-      cmd += "npm install -g ${pkg}\n"
-    }
-    sh label: 'Install packages', script: """#!/bin/bash
-    set -euxo pipefail
-    ${cmd}
-    """
-    stash allowEmpty: true, name: 'nodeJs', includes: "node/**", useDefaultExcludes: false
-  }
-}
 /**
  unstash the stash passed as parameter or execute the block code passed.
  This works as a cache that make the retrieve process only once, the rest of times
