@@ -4,8 +4,8 @@
  * you may not use this file except in compliance with the Elastic License.
  */
 
-import { Root } from 'joi';
 import { Legacy } from 'kibana';
+import { ConfigSchema } from './config';
 import { Plugin, PluginSetupContract } from './plugin';
 import { SavedObjectsSerializer, SavedObjectsSchema } from '../../../../src/core/server';
 import mappings from './mappings.json';
@@ -25,29 +25,12 @@ export function taskManager(kibana: any) {
     id: 'task_manager',
     require: ['kibana', 'elasticsearch', 'xpack_main'],
     configPrefix: 'xpack.task_manager',
-    config(Joi: Root) {
-      return Joi.object({
-        enabled: Joi.boolean().default(true),
-        max_attempts: Joi.number()
-          .description(
-            'The maximum number of times a task will be attempted before being abandoned as failed'
-          )
-          .min(1)
-          .default(3),
-        poll_interval: Joi.number()
-          .description('How often, in milliseconds, the task manager will look for more work.')
-          .min(1000)
-          .default(3000),
-        index: Joi.string()
-          .description('The name of the index used to store task information.')
-          .default('.kibana_task_manager'),
-        max_workers: Joi.number()
-          .description(
-            'The maximum number of tasks that this Kibana instance will run simultaneously.'
-          )
-          .min(1) // disable the task manager rather than trying to specify it with 0 workers
-          .default(10),
-      }).default();
+    config() {
+      // Using internal getSchema as a small step
+      // towards migration to New Platform, at which point
+      // we'll be able to use ConfigSchema directly
+      // @ts-ignore
+      return ConfigSchema.getSchema();
     },
     init(server: Legacy.Server) {
       const plugin = new Plugin({
